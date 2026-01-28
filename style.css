@@ -1,8 +1,36 @@
+* {
+    box-sizing: border-box;
+}
+
+:root {
+    --bg-color: #f1f5f9;
+    --text-color: #111827;
+    --card-bg: #ffffff;
+    --button-bg: #ffffff;
+    --button-text: #111827;
+    --border-color: #d1d5db;
+    --accent: #facc15;
+}
+
+html[data-theme='dark'] {
+    --bg-color: #0b1120;
+    --text-color: #e5e7eb;
+    --card-bg: #111827;
+    --button-bg: #0f172a;
+    --button-text: #e5e7eb;
+    --border-color: #1f2937;
+    --accent: #fde047;
+}
+
 body {
-    font-family: sans-serif;
+    font-family: "Trebuchet MS", "Segoe UI", sans-serif;
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    background-color: #f0f0f0;
+    background: radial-gradient(circle at top, rgba(148, 163, 184, 0.35), transparent 55%),
+                var(--bg-color);
+    color: var(--text-color);
+    transition: background-color 0.3s ease, color 0.3s ease;
+    padding: 24px;
 }
