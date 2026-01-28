@@ -1,13 +1,82 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lotto Number Generator</title>
+    <title>지구온난화 지도</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;700&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
-    <lotto-generator></lotto-generator>
+    <div class="page">
+        <header class="hero">
+            <div class="hero-text">
+                <p class="eyebrow">지구온난화 상태</p>
+                <h1>지금, 지구는 어디가 가장 뜨거워지고 있을까?</h1>
+                <p class="subhead">각 나라의 연간 평균 기온이 1991–2020 평균보다 얼마나 높은지 한눈에 보여주는 지도입니다.</p>
+            </div>
+            <div class="hero-badges">
+                <div class="badge">
+                    <span class="badge-title">기준</span>
+                    <span class="badge-value">1991–2020</span>
+                </div>
+                <div class="badge">
+                    <span class="badge-title">지표</span>
+                    <span class="badge-value">연간 온도 이상치 (°C)</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="content">
+            <section class="map-card">
+                <div class="map-header">
+                    <div>
+                        <h2>국가별 온도 이상치</h2>
+                        <p class="hint">지도를 움직이며 각 나라의 값을 확인하세요.</p>
+                    </div>
+                    <div class="legend">
+                        <div class="legend-title">차가움 → 뜨거움</div>
+                        <div class="legend-scale" id="legend-scale"></div>
+                        <div class="legend-labels">
+                            <span id="legend-min">-</span>
+                            <span id="legend-max">-</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="map-wrap">
+                    <div id="map"></div>
+                    <div class="tooltip" id="tooltip" aria-hidden="true"></div>
+                </div>
+            </section>
+
+            <aside class="sidebar">
+                <div class="stat">
+                    <span class="stat-label">최신 연도</span>
+                    <span class="stat-value" id="stat-year">-</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">데이터 국가 수</span>
+                    <span class="stat-value" id="stat-count">-</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">최저 ↔ 최고</span>
+                    <span class="stat-value" id="stat-range">-</span>
+                </div>
+                <div class="note">
+                    <h3>이상치란?</h3>
+                    <p>특정 해의 평균 기온이 과거 기준(1991–2020) 평균과 얼마나 다른지를 °C로 표현한 값입니다.</p>
+                </div>
+            </aside>
+        </main>
+
+        <footer class="footer">
+            <span>자료: Our World in Data (ERA5 기반), 연간 온도 이상치</span>
+        </footer>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
     <script src="main.js"></script>
 </body>
 </html>

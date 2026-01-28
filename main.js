@@ -1,148 +1,146 @@
-class LottoGenerator extends HTMLElement {
-    constructor() {
-        super();
-        const shadow = this.attachShadow({ mode: 'open' });
+const DATA_URL = "https://ourworldindata.org/grapher/annual-temperature-anomalies.csv";
+const TOPO_URL = "https://cdn.jsdelivr.net/npm/visionscarto-world-atlas@0.1.0/world/110m.json";
 
-        const wrapper = document.createElement('div');
-        wrapper.setAttribute('class', 'lotto-generator');
+const mapContainer = document.querySelector("#map");
+const tooltip = document.querySelector("#tooltip");
+const statYear = document.querySelector("#stat-year");
+const statCount = document.querySelector("#stat-count");
+const statRange = document.querySelector("#stat-range");
+const legendMin = document.querySelector("#legend-min");
+const legendMax = document.querySelector("#legend-max");
 
-        const title = document.createElement('h1');
-        title.textContent = 'Lotto Number Generator';
+const state = {
+    countries: [],
+    dataByCode: new Map(),
+    latestYear: null,
+    min: null,
+    max: null,
+    maxAbs: null
+};
 
-        const header = document.createElement('div');
-        header.setAttribute('class', 'header');
+function formatValue(value) {
+    if (value === null || value === undefined || Number.isNaN(value)) {
+        return "자료 없음";
+    }
+    const sign = value > 0 ? "+" : "";
+    return `${sign}${value.toFixed(2)}°C`;
+}
 
-        const themeToggle = document.createElement('button');
-        themeToggle.setAttribute('class', 'theme-toggle');
+function updateStats() {
+    statYear.textContent = state.latestYear ?? "-";
+    statCount.textContent = `${state.dataByCode.size}개국`;
 
-        const numbersContainer = document.createElement('div');
-        numbersContainer.setAttribute('class', 'numbers');
-
-        const button = document.createElement('button');
-        button.setAttribute('class', 'generate');
-        button.textContent = 'Generate Numbers';
-        button.addEventListener('click', () => {
-            this.generateNumbers(numbersContainer);
-        });
-
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const storedTheme = localStorage.getItem('theme');
-        const initialTheme = storedTheme || (prefersDark ? 'dark' : 'light');
-        this.applyTheme(initialTheme, themeToggle);
-        themeToggle.addEventListener('click', () => {
-            const nextTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-            this.applyTheme(nextTheme, themeToggle);
-        });
-
-        const style = document.createElement('style');
-        style.textContent = `
-            .lotto-generator {
-                text-align: center;
-                background: var(--card-bg);
-                color: var(--text-color);
-                padding: 32px 28px;
-                border-radius: 16px;
-                box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
-                min-width: 320px;
-            }
-            .header {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 12px;
-            }
-            h1 {
-                margin: 0;
-                font-size: 24px;
-            }
-            .theme-toggle {
-                border: 1px solid var(--border-color);
-                background: var(--button-bg);
-                color: var(--button-text);
-                padding: 8px 12px;
-                border-radius: 999px;
-                cursor: pointer;
-                font-weight: 600;
-            }
-            .numbers {
-                display: flex;
-                justify-content: center;
-                margin-top: 24px;
-                flex-wrap: wrap;
-                gap: 10px;
-            }
-            .number {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                width: 50px;
-                height: 50px;
-                border-radius: 50%;
-                margin: 0 5px;
-                font-size: 20px;
-                font-weight: bold;
-                color: #333;
-                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            }
-            .generate {
-                margin-top: 24px;
-                border: none;
-                background: var(--accent);
-                color: #0d1117;
-                padding: 12px 18px;
-                border-radius: 10px;
-                font-size: 15px;
-                font-weight: 700;
-                cursor: pointer;
-            }
-        `;
-
-        shadow.appendChild(style);
-        shadow.appendChild(wrapper);
-        wrapper.appendChild(header);
-        header.appendChild(title);
-        header.appendChild(themeToggle);
-        wrapper.appendChild(numbersContainer);
-        wrapper.appendChild(button);
+    if (Number.isFinite(state.min) && Number.isFinite(state.max)) {
+        statRange.textContent = `${state.min.toFixed(2)}°C ↔ ${state.max.toFixed(2)}°C`;
+    } else {
+        statRange.textContent = "-";
     }
 
-    applyTheme(theme, button) {
-        document.documentElement.setAttribute('data-theme', theme);
-        localStorage.setItem('theme', theme);
-        button.textContent = theme === 'dark' ? 'Light Mode' : 'Dark Mode';
-    }
-
-    generateNumbers(container) {
-        container.innerHTML = '';
-        const numbers = new Set();
-        while (numbers.size < 6) {
-            numbers.add(Math.floor(Math.random() * 45) + 1);
-        }
-
-        for (const number of [...numbers].sort((a, b) => a - b)) {
-            const numberElement = document.createElement('div');
-            numberElement.setAttribute('class', 'number');
-            numberElement.textContent = number;
-            this.setBallColor(numberElement, number);
-            container.appendChild(numberElement);
-        }
-    }
-
-    setBallColor(element, number) {
-        let color;
-        if (number <= 10) {
-            color = '#fbc400';
-        } else if (number <= 20) {
-            color = '#69c8f2';
-        } else if (number <= 30) {
-            color = '#ff7272';
-        } else if (number <= 40) {
-            color = '#aaa';
-        } else {
-            color = '#b0d840';
-        }
-        element.style.backgroundColor = color;
+    if (Number.isFinite(state.maxAbs)) {
+        legendMin.textContent = `${(-state.maxAbs).toFixed(1)}°C`;
+        legendMax.textContent = `${state.maxAbs.toFixed(1)}°C`;
+    } else {
+        legendMin.textContent = "-";
+        legendMax.textContent = "-";
     }
 }
 
-customElements.define('lotto-generator', LottoGenerator);
+function drawMap() {
+    if (!state.countries.length) return;
+
+    const width = mapContainer.clientWidth;
+    const height = Math.max(360, Math.round(width * 0.55));
+
+    mapContainer.innerHTML = "";
+    const svg = d3.select(mapContainer)
+        .append("svg")
+        .attr("viewBox", `0 0 ${width} ${height}`)
+        .attr("role", "img")
+        .attr("aria-label", "국가별 온도 이상치 지도");
+
+    const projection = d3.geoNaturalEarth1()
+        .fitSize([width, height], { type: "FeatureCollection", features: state.countries });
+    const path = d3.geoPath(projection);
+
+    const color = d3.scaleDiverging()
+        .domain([state.maxAbs, 0, -state.maxAbs])
+        .interpolator(d3.interpolateRdYlBu)
+        .clamp(true);
+
+    svg.append("g")
+        .selectAll("path")
+        .data(state.countries)
+        .join("path")
+        .attr("class", (d) => state.dataByCode.has(d.properties.a3) ? "country" : "country no-data")
+        .attr("fill", (d) => {
+            const value = state.dataByCode.get(d.properties.a3);
+            return value === undefined ? "#d7d1c8" : color(value);
+        })
+        .attr("d", path)
+        .on("mousemove", (event, d) => {
+            const value = state.dataByCode.get(d.properties.a3);
+            const [x, y] = d3.pointer(event, mapContainer);
+            tooltip.style.opacity = "1";
+            tooltip.style.left = `${x}px`;
+            tooltip.style.top = `${y}px`;
+            tooltip.setAttribute("aria-hidden", "false");
+            tooltip.innerHTML = `<strong>${d.properties.name}</strong><br>${formatValue(value)}`;
+        })
+        .on("mouseleave", () => {
+            tooltip.style.opacity = "0";
+            tooltip.setAttribute("aria-hidden", "true");
+        });
+}
+
+function parseData(rows) {
+    if (!rows.length) return;
+    const valueKey = Object.keys(rows[0]).find(
+        (key) => !["Entity", "Code", "Year"].includes(key)
+    );
+    const latestYear = d3.max(rows, (d) => +d.Year);
+    const filtered = rows.filter((d) => +d.Year === latestYear && d.Code && d.Code.length === 3);
+
+    const values = [];
+    const dataByCode = new Map();
+    filtered.forEach((d) => {
+        const value = Number(d[valueKey]);
+        if (Number.isFinite(value)) {
+            values.push(value);
+            dataByCode.set(d.Code, value);
+        }
+    });
+
+    if (!values.length) return;
+
+    const min = d3.min(values);
+    const max = d3.max(values);
+    const maxAbs = Math.max(Math.abs(min), Math.abs(max));
+
+    state.latestYear = latestYear;
+    state.dataByCode = dataByCode;
+    state.min = min;
+    state.max = max;
+    state.maxAbs = maxAbs;
+}
+
+function handleResize() {
+    drawMap();
+}
+
+Promise.all([
+    d3.json(TOPO_URL),
+    d3.csv(DATA_URL)
+])
+    .then(([world, rows]) => {
+        const countries = topojson.feature(world, world.objects.countries).features;
+        state.countries = countries;
+        parseData(rows);
+        updateStats();
+        drawMap();
+        const observer = new ResizeObserver(handleResize);
+        observer.observe(mapContainer);
+    })
+    .catch((error) => {
+        mapContainer.innerHTML = "<p>데이터를 불러오지 못했습니다. 네트워크 상태를 확인해주세요.</p>";
+        console.error(error);
+    });
