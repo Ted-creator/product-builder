@@ -8,6 +8,7 @@ const statCount = document.querySelector("#stat-count");
 const statRange = document.querySelector("#stat-range");
 const legendMin = document.querySelector("#legend-min");
 const legendMax = document.querySelector("#legend-max");
+const methodYear = document.querySelector("#method-year");
 
 const state = {
     countries: [],
@@ -29,6 +30,9 @@ function formatValue(value) {
 function updateStats() {
     statYear.textContent = state.latestYear ?? "-";
     statCount.textContent = `${state.dataByCode.size}개국`;
+    if (methodYear) {
+        methodYear.textContent = state.latestYear ? `${state.latestYear}년 기준` : "데이터 자동 반영";
+    }
 
     if (Number.isFinite(state.min) && Number.isFinite(state.max)) {
         statRange.textContent = `${state.min.toFixed(2)}°C ↔ ${state.max.toFixed(2)}°C`;
